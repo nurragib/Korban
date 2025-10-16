@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- ADDED: Google Fonts CDN for Quicksand (Rounded Font) -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
         /* Custom styles for the minimal, premium look */
@@ -20,19 +20,14 @@
         body, button, input, textarea, select, h1, h2, h3, a {
             font-family: 'Quicksand', sans-serif !important; 
         }
-        /* Increased font weight mapping for Quicksand */
-        h1, h2, h3, .font-black {
-            font-weight: 900 !important; /* Use the highest weight for font-black */
-        }
-        .font-extrabold {
-            font-weight: 700 !important;
-        }
-        
         body {
             background-color: #f8fafc; /* Tailwind gray-50 */
             transition: background-color 0.3s;
         }
-
+        h1, h2, h3 {
+            font-weight: 700 !important;
+        }
+        
         /* Styles for the auto-scrolling product track (Applies to all carousels on desktop) */
         .product-track {
             display: flex;
@@ -77,10 +72,6 @@
             background-color: rgba(0, 0, 0, 0.75);
             transition: opacity 0.3s ease-out;
         }
-        /* Utility class for the toggled element transition */
-        .rotate-90 {
-            transform: rotate(90deg);
-        }
     </style>
     <script>
         tailwind.config = {
@@ -90,7 +81,7 @@
                         'charcoal': '#2C3E50',
                         'teal-accent': '#1ABC9C',
                         'light-gray': '#F4F4F4',
-                        'salmon-accent': '#FF6B6B', // The eye-catching color for price
+                        'salmon-accent': '#FF6B6B', 
                     }
                 }
             }
@@ -217,9 +208,8 @@
                 if (products.length > 1) {
                     html += `
                         <div class="text-center mt-6">
-                            <!-- UPDATED: Background color changed to Light Gray for minimal look -->
                             <button onclick="toggleCategoryView('${category}', '${containerId}')" 
-                                class="px-6 py-3 bg-light-gray text-charcoal border border-gray-300 font-bold rounded-full shadow-sm hover:bg-gray-200 transition duration-200 uppercase text-sm">
+                                class="px-6 py-3 bg-salmon-accent text-white font-bold rounded-full shadow-lg hover:bg-red-500 transition duration-200 uppercase text-sm">
                                 See ${totalRemaining} More Products
                             </button>
                         </div>
@@ -326,21 +316,17 @@
                     <!-- Increased spacing: mb-3 instead of mb-2 -->
                     <h3 class="text-lg font-semibold text-charcoal mb-3 truncate">${product.name}</h3>
                     
-                    <!-- 
-                        UPDATED FOR MINIMALIST MOBILE LOOK:
-                        - Price is now Salmon-Accent, max bold (font-black), and larger (text-2xl).
-                        - Button uses the Teal accent for the CTA.
-                    -->
-                    <div class="flex justify-between items-center">
+                    <!-- MOBILE FIX APPLIED HERE: FORCE VERTICAL STACK ON MOBILE (flex-col) and horizontal on tablet+ (sm:flex-row) -->
+                    <div class="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                         <!-- Price on Left -->
                         <div class="text-left flex-shrink-0">
-                            <!-- !!! UPDATED: Color to salmon-accent, size to text-2xl, weight to font-black !!! -->
-                            <span class="final-price text-2xl font-black text-salmon-accent">৳ ${product.price}</span>
+                            <!-- REDUCED PRICE FONT SIZE for mobile: text-xl (was text-2xl) -->
+                            <span class="final-price text-xl font-extrabold text-teal-accent">৳ ${product.price}</span>
                         </div>
                         
                         <!-- Button on Right -->
                         <button onclick="handleKinunClick(${product.id})" 
-                            class="kinun-button flex-shrink-0 px-4 py-1.5 bg-teal-accent text-white text-sm rounded-lg font-bold hover:bg-[#158C7C] transition duration-200 shadow-md">
+                            class="kinun-button w-full sm:w-auto flex-shrink-0 px-3 py-1.5 bg-salmon-accent text-white text-xs rounded-full font-semibold hover:bg-red-500 transition duration-200 shadow-md">
                             Order Now
                         </button>
                     </div>
@@ -349,18 +335,6 @@
         }
         
         // --- CHECKOUT LOGIC ---
-
-        // Function to toggle the payment section visibility and arrow icon
-        function togglePaymentSection() {
-            const content = document.getElementById('payment-method-content');
-            const icon = document.getElementById('payment-toggle-icon');
-
-            // Toggle the hidden class
-            content.classList.toggle('hidden');
-            
-            // Toggle the rotation class for the icon
-            icon.classList.toggle('rotate-90');
-        }
 
         // Function for the 'Order Now' button tap
         function handleKinunClick(productId) {
@@ -373,7 +347,6 @@
             currentCheckoutProduct = product;
             
             // Populate modal with product info - using product.price now
-            // UPDATED: Now setting only the title and price text content
             document.getElementById('checkout-product-title').textContent = product.name;
             document.getElementById('checkout-product-price').textContent = `৳ ${product.price}`;
             document.getElementById('checkout-total-price').textContent = `৳ ${product.price}`;
@@ -386,16 +359,6 @@
             // Ensure the form content is visible (in case a confirmation message was shown previously)
             document.getElementById('modal-content-form').classList.remove('hidden');
             document.getElementById('modal-content-confirmation').classList.add('hidden');
-            
-            // Reset form visibility: 
-            // 1. Ensure payment method content is hidden
-            const paymentContent = document.getElementById('payment-method-content');
-            if (!paymentContent.classList.contains('hidden')) {
-                paymentContent.classList.add('hidden');
-            }
-            // 2. Ensure payment icon is reset (pointing right/0deg)
-            document.getElementById('payment-toggle-icon').classList.remove('rotate-90');
-
         }
 
         function closeCheckoutModal() {
@@ -406,88 +369,8 @@
             document.getElementById('checkout-form').reset();
         }
 
-        // ... index.html এর ভেতরের <script> ট্যাগ এর মধ্যে
-async function handleCheckoutSubmit(event) {
-    event.preventDefault();
-
-    // 1. ইনপুট ডেটা ভ্যালিডেশন (Validation)
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const address = document.getElementById('address').value.trim();
-    const paymentMethodElement = document.querySelector('input[name="payment_method"]:checked');
-    const formError = document.getElementById('form-error');
-
-    formError.classList.add('hidden'); // Clear previous errors
-
-    if (!name || !phone || !address || !paymentMethodElement) {
-        formError.textContent = 'দয়া করে সমস্ত তথ্য পূরণ করুন এবং একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।';
-        formError.classList.remove('hidden');
-        return;
-    }
-    
-    const product = currentCheckoutProduct;
-
-    // 2. অর্ডার ডেটা পেলোড তৈরি
-    const orderPayload = {
-        name: name,
-        phone: phone,
-        address: address,
-        payment_method: paymentMethodElement.value,
-        
-        // প্রোডাক্টের তথ্য
-        product_id: product.id,
-        product_name: product.name,
-        total_price: product.price,
-    };
-    
-    // 3. Netlify Function এর Endpoint
-    const functionEndpoint = '/.netlify/functions/save-order'; // এটি আপনার save-order.js ফাইলের পাথ
-    const submitButton = event.submitter;
-    submitButton.disabled = true; // সাবমিট করার সময় বাটন ডিসেবল করা
-    submitButton.textContent = 'অর্ডার করা হচ্ছে...'; // লোডিং টেক্সট
-
-    try {
-        // 4. Netlify Function-কে কল করা
-        const response = await fetch(functionEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderPayload),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            // 5. সফল হলে কনফার্মেশন মেসেজ দেখানো
-            const confirmationDetails = `
-                <div class="text-left space-y-2 text-gray-700">
-                    <p><strong>আইটেম:</strong> ${product.name}</p>
-                    <p><strong>মোট মূল্য:</strong> <span class="text-teal-accent font-bold">৳ ${product.price}</span></p>
-                    <p><strong>নাম:</strong> ${orderPayload.name}</p>
-                    <p><strong>ফোন:</strong> ${orderPayload.phone}</p>
-                    <p><strong>ঠিকানা:</strong> ${orderPayload.address}</p>
-                    <p><strong>পেমেন্ট পদ্ধতি:</strong> ${orderPayload.payment_method}</p>
-                    <p class="mt-2 text-xs text-salmon-accent">অর্ডার আইডি: ${result.orderId || 'N/A'}</p>
-                </div>
-                <p class="mt-4 text-sm text-gray-500">আপনার MFS পেমেন্ট বিবরণ নিশ্চিত করার জন্য একজন প্রতিনিধি শীঘ্রই আপনার সাথে যোগাযোগ করবেন।</p>
-            `;
-            showConfirmationMessage(confirmationDetails);
-
-        } else {
-            // 6. সার্ভার থেকে কোনো ত্রুটি এলে
-            formError.textContent = `অর্ডার ব্যর্থ: ${result.message || 'সার্ভারে ত্রুটি হয়েছে।'}`;
-            formError.classList.remove('hidden');
-        }
-
-    } catch (error) {
-        console.error('Network or Function Call Error:', error);
-        formError.textContent = 'নেটওয়ার্ক সংযোগে সমস্যা। অনুগ্রহ করে আবার চেষ্টা করুন।';
-        formError.classList.remove('hidden');
-    } finally {
-        // 7. কাজ শেষ হলে বাটন রিস্টোর করা
-        submitButton.disabled = false;
-        submitButton.textContent = 'অর্ডার নিশ্চিত করুন';
-    }
-}
+        function handleCheckoutSubmit(event) {
+            event.preventDefault();
 
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -496,7 +379,7 @@ async function handleCheckoutSubmit(event) {
 
             // Simple validation
             if (!name || !phone || !address || !paymentMethod) {
-                document.getElementById('form-error').textContent = "অনুগ্রহ করে সকল তথ্য পূরণ করুন এবং একটি পেমেন্ট পদ্ধতি নির্বাচন করুন। (Please fill in all details and select a payment method.)";
+                document.getElementById('form-error').textContent = "Please fill in all details and select a payment method.";
                 document.getElementById('form-error').classList.remove('hidden');
                 return;
             }
@@ -507,14 +390,14 @@ async function handleCheckoutSubmit(event) {
             // Prepare the confirmation message details - using product.price now
             const confirmationDetails = `
                 <div class="text-left space-y-2 text-gray-700">
-                    <p><strong>আইটেম (Item):</strong> ${product.name}</p>
-                    <p><strong>মোট মূল্য (Total Price):</strong> <span class="text-teal-accent font-bold">৳ ${product.price}</span></p>
-                    <p><strong>নাম (Name):</strong> ${name}</p>
-                    <p><strong>ফোন (Phone):</strong> ${phone}</p>
-                    <p><strong>ঠিকানা (Address):</strong> ${address}</p>
-                    <p><strong>পেমেন্ট পদ্ধতি (Payment Method):</strong> ${paymentMethod}</p>
+                    <p><strong>Item:</strong> ${product.name}</p>
+                    <p><strong>Total Price:</strong> <span class="text-teal-accent font-bold">৳ ${product.price}</span></p>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Phone:</strong> ${phone}</p>
+                    <p><strong>Address:</strong> ${address}</p>
+                    <p><strong>Payment Method:</strong> ${paymentMethod}</p>
                 </div>
-                <p class="mt-4 text-sm text-gray-500">আপনার MFS পেমেন্ট বিবরণ নিশ্চিত করার জন্য একজন প্রতিনিধি শীঘ্রই আপনার সাথে যোগাযোগ করবেন।</p>
+                <p class="mt-4 text-sm text-gray-500">A representative will contact you shortly to confirm the MFS payment details.</p>
             `;
 
             // Display confirmation screen
@@ -531,14 +414,14 @@ async function handleCheckoutSubmit(event) {
                     <!-- Checkmark Icon -->
                     <svg class="w-16 h-16 text-teal-accent mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     
-                    <h2 class="text-2xl font-bold text-charcoal mb-4">অর্ডার নিশ্চিত! (Order Confirmed!)</h2>
+                    <h2 class="text-2xl font-bold text-charcoal mb-4">Order Confirmed!</h2>
                     
-                    <div class="bg-light-gray p-4 rounded-lg shadow-inner inline-block text-left">
+                    <div class="bg-light-gray p-4 rounded-lg shadow-inner inline-block">
                         ${detailsHTML}
                     </div>
 
                     <button onclick="closeCheckoutModal()" class="mt-8 w-full px-6 py-3 bg-teal-accent text-white rounded-full font-bold hover:bg-[#158C7C] transition duration-200">
-                        কেনাকাটা চালিয়ে যান (Continue Shopping)
+                        Continue Shopping
                     </button>
                 </div>
             `;
@@ -717,7 +600,9 @@ async function handleCheckoutSubmit(event) {
                         Students Friendly Hub In Rajshahi
                     </h1>
                     <p class="text-base sm:text-xl text-gray-600 mb-6">Premium Essentials for a Minimal Price. Guaranteed Student Savings!</p>
-                    <!-- View Top Selling Deals Button was removed here per user request -->
+                    <a href="#top-selling-products-strip" class="px-6 py-3 bg-teal-accent text-white font-bold rounded-full shadow-lg hover:bg-[#158C7C] transition duration-200 uppercase text-sm sm:text-base">
+                        View Top Selling Deals
+                    </a>
                 </div>
             </section>
             
@@ -832,7 +717,6 @@ async function handleCheckoutSubmit(event) {
         <div class="absolute inset-0" onclick="closeCheckoutModal()"></div>
 
         <!-- Modal Content Container -->
-        <!-- MODAL: max-w-lg is good, adjusted internal padding for better mobile view -->
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto transform transition-all duration-300 relative z-10">
             
             <!-- Close Button -->
@@ -843,60 +727,41 @@ async function handleCheckoutSubmit(event) {
 
             <!-- Checkout Form Content -->
             <div id="modal-content-form">
-                <div class="bg-charcoal text-white p-4 sm:p-6 rounded-t-xl text-center">
-                    <h2 class="text-xl sm:text-2xl font-bold">Complete Your Order</h2>
+                <div class="bg-charcoal text-white p-6 rounded-t-xl text-center">
+                    <h2 class="text-2xl font-bold">Complete Your Order</h2>
                 </div>
 
-                <!-- MAIN FORM CONTENT (Responsive Padding: p-4 sm:p-6) -->
-                <div class="p-4 sm:p-6">
+                <div class="p-6">
                     
-                    <!-- Product Summary (UPDATED FOR RESPONSIVENESS AND COMPACT LAYOUT) -->
-                    <div class="flex items-start space-x-4 mb-6 border-b pb-4">
-                        <img id="product-image-modal" src="https://placehold.co/80x80/F4F4F4/2C3E50?text=Item" alt="Product Thumbnail" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0">
-                        
-                        <!-- Flex container to hold Title and Price on one row -->
-                        <div class="flex-grow min-w-0">
-                            <!-- Item label smaller -->
-                            <p class="text-xs text-gray-500 mb-1">Item:</p>
-                            
-                            <!-- Title and Price in one row, allowing truncation on mobile -->
-                            <div class="flex justify-between items-start gap-2">
-                                <!-- Title is smaller (text-base) and truncates if necessary -->
-                                <h3 id="checkout-product-title" class="text-base font-semibold text-charcoal truncate min-w-0">Product Name</h3>
-                                
-                                <!-- Price is smaller (text-lg) and fixed width (whitespace-nowrap) -->
-                                <p id="checkout-product-price" class="text-lg font-extrabold text-teal-accent flex-shrink-0 whitespace-nowrap">৳ 000</p>
-                            </div>
+                    <!-- Product Summary -->
+                    <div class="flex items-center space-x-4 mb-6 border-b pb-4">
+                        <img id="product-image-modal" src="https://placehold.co/80x80/F4F4F4/2C3E50?text=Item" alt="Product Thumbnail" class="w-16 h-16 object-cover rounded-lg">
+                        <div>
+                            <p class="text-sm text-gray-500">Item:</p>
+                            <h3 id="checkout-product-title" class="text-xl font-semibold text-charcoal truncate">Product Name</h3>
                         </div>
+                        <p id="checkout-product-price" class="text-2xl font-extrabold text-teal-accent ml-auto">৳ 000</p>
                     </div>
-                    <!-- End of UPDATED Product Summary -->
 
                     <form id="checkout-form" onsubmit="handleCheckoutSubmit(event)">
-                        
-                        <!-- 1. Customer Information (Always visible) -->
+                        <!-- Customer Information -->
                         <h4 class="text-lg font-bold text-charcoal mb-3">1. Your Contact Information</h4>
                         <div class="space-y-4 mb-6">
-                            <input type="text" id="name" placeholder="Full Name (সম্পূর্ণ নাম)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
-                            <input type="tel" id="phone" placeholder="Phone Number (ফোন নম্বর)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
-                            <textarea id="address" placeholder="Full Delivery Address in Rajshahi (সম্পূর্ণ ঠিকানা)" required rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition"></textarea>
+                            <input type="text" id="name" placeholder="Full Name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
+                            <input type="tel" id="phone" placeholder="Phone Number (e.g., 01XXXXXXXXX)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
+                            <textarea id="address" placeholder="Full Delivery Address in Rajshahi" required rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition"></textarea>
                         </div>
-                        
-                        <!-- 2. Payment Method Selection (Collapsible Toggle) -->
-                        <button type="button" onclick="togglePaymentSection()" class="w-full flex justify-between items-center text-lg font-bold text-charcoal p-3 mb-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
-                            <span>2. Select Payment Method (পেমেন্ট পদ্ধতি)</span>
-                            <!-- Icon: starts pointing right (0deg), rotates 90deg when open -->
-                            <svg id="payment-toggle-icon" class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                        
-                        <!-- Payment Method Content (Initially Hidden) -->
-                        <div id="payment-method-content" class="space-y-3 mb-6 hidden">
+
+                        <!-- Payment Method Selection -->
+                        <h4 class="text-lg font-bold text-charcoal mb-3">2. Select Payment Method</h4>
+                        <div class="space-y-3 mb-6">
                             
                             <!-- bKash Option -->
                             <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-light-gray transition duration-150 has-checked:border-teal-accent">
-                                <input type="radio" name="payment_method" value="bKash" class="form-radio h-5 w-5 text-teal-accent checked:bg-teal-accent focus:ring-teal-accent">
+                                <input type="radio" name="payment_method" value="bKash" class="form-radio h-5 w-5 text-teal-accent checked:bg-teal-accent focus:ring-teal-accent" required>
                                 <span class="ml-3 font-semibold text-gray-700 flex items-center">
                                     <img src="https://placehold.co/40x20/E11961/FFFFFF?text=bKash" alt="bKash Logo" class="w-10 h-5 object-contain mr-2 rounded">
-                                    bKash (মোবাইল ব্যাংকিং)
+                                    bKash (Mobile Banking)
                                 </span>
                             </label>
 
@@ -905,7 +770,7 @@ async function handleCheckoutSubmit(event) {
                                 <input type="radio" name="payment_method" value="Rocket" class="form-radio h-5 w-5 text-teal-accent checked:bg-teal-accent focus:ring-teal-accent">
                                 <span class="ml-3 font-semibold text-gray-700 flex items-center">
                                     <img src="https://placehold.co/40x20/92278F/FFFFFF?text=Rocket" alt="Rocket Logo" class="w-10 h-5 object-contain mr-2 rounded">
-                                    Rocket (মোবাইল ব্যাংকিং)
+                                    Rocket (Mobile Banking)
                                 </span>
                             </label>
                             
@@ -914,24 +779,14 @@ async function handleCheckoutSubmit(event) {
                                 <input type="radio" name="payment_method" value="Nagad" class="form-radio h-5 w-5 text-teal-accent checked:bg-teal-accent focus:ring-teal-accent">
                                 <span class="ml-3 font-semibold text-gray-700 flex items-center">
                                     <img src="https://placehold.co/40x20/FF7701/FFFFFF?text=Nagad" alt="Nagad Logo" class="w-10 h-5 object-contain mr-2 rounded">
-                                    Nagad (মোবাইল ব্যাংকিং)
+                                    Nagad (Mobile Banking)
                                 </span>
                             </label>
-                            
-                            <!-- Cash on Delivery Option -->
-                            <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-light-gray transition duration-150">
-                                <input type="radio" name="payment_method" value="Cash on Delivery" class="form-radio h-5 w-5 text-teal-accent checked:bg-teal-accent focus:ring-teal-accent">
-                                <span class="ml-3 font-semibold text-gray-700 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m4 2h2m-4 0h2m4-2h2m-4 0V9m0 6a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    ক্যাশ অন ডেলিভারি (Cash on Delivery)
-                                </span>
-                            </label>
-
                         </div>
 
                         <!-- Summary & Submit -->
                         <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg mb-4">
-                            <span class="text-lg font-semibold text-charcoal">Total Payable (মোট মূল্য):</span>
+                            <span class="text-lg font-semibold text-charcoal">Total Payable:</span>
                             <span id="checkout-total-price" class="text-2xl font-extrabold text-teal-accent">৳ 000</span>
                         </div>
                         
@@ -939,7 +794,7 @@ async function handleCheckoutSubmit(event) {
                         <p id="form-error" class="hidden text-sm text-center text-red-600 mb-4 font-medium"></p>
 
                         <button type="submit" class="w-full px-6 py-3 bg-teal-accent text-white font-bold rounded-full shadow-lg hover:bg-[#158C7C] transition duration-200 uppercase">
-                            অর্ডার করুন (Place Order)
+                            Place Order (Cash on Delivery / MFS)
                         </button>
                     </form>
                 </div>
@@ -966,4 +821,3 @@ async function handleCheckoutSubmit(event) {
 
 </body>
 </html>
-
