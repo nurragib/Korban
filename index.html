@@ -176,7 +176,8 @@
                 renderHomeCarousels();
                 // --- Start auto-scroll ONLY for Top Selling (now isFeatured) ---
                 currentScrollIntervals.push(startAutoScroll('top-selling-carousel-track'));
-            } else if (pageId === 'stationary-page') {
+            // FIXED: Changed 'stationary-page' to 'stationery-page' (correct spelling)
+            } else if (pageId === 'stationery-page') { 
                 renderCategoryPage('Stationery');
             } else if (pageId === 'girls-hub-page') {
                 renderCategoryPage('Girls Hub');
@@ -192,6 +193,7 @@
             // Update URL hash for simple back/forward support (optional but helpful)
             window.location.hash = pageId;
         }
+
 
         // --- PRODUCT RENDERING FUNCTIONS ---
 
@@ -215,10 +217,14 @@
                 
                 // Add the "See More" button if there's more than one product
                 if (products.length > 1) {
+                    // Map category name to page ID for "See More" button on mobile
+                    // FIXED: Ensure pageId uses the correct spelling 'stationery-page'
+                    const pageId = category.toLowerCase().replace(/\s/g, '-') + '-page';
+
                     html += `
                         <div class="text-center mt-6">
-                            <!-- UPDATED: Background color changed to Light Gray for minimal look -->
-                            <button onclick="toggleCategoryView('${category}', '${containerId}')" 
+                            <!-- UPDATED: Clicking "See More" now correctly navigates to the full category page -->
+                            <button onclick="showPage('${pageId}')" 
                                 class="px-6 py-3 bg-light-gray text-charcoal border border-gray-300 font-bold rounded-full shadow-sm hover:bg-gray-200 transition duration-200 uppercase text-sm">
                                 See ${totalRemaining} More Products
                             </button>
@@ -248,6 +254,10 @@
 
         // Function to show all products in a single-column list (Only called from Mobile's "See More")
         function toggleCategoryView(category, containerId) {
+            // This function is now OBSOLETE since 'See More' navigates to a full page via showPage()
+            // Kept as a placeholder for potential future functionality but not currently used 
+            // by the updated mobile "See More" button.
+            
             const container = document.getElementById(containerId);
             if (!container) return;
             
@@ -282,7 +292,7 @@
             }
             
             // 2-5. Use the responsive strip renderer for categories
-            renderResponsiveCategoryStrip('Stationery', 'stationary-category-container');
+            renderResponsiveCategoryStrip('Stationery', 'stationery-category-container'); // FIXED: Category strip container ID spelling
             renderResponsiveCategoryStrip('Girls Hub', 'girls-hub-category-container');
             renderResponsiveCategoryStrip('Boys Hub', 'boys-hub-category-container');
             renderResponsiveCategoryStrip('Bags', 'bags-category-container');
@@ -290,19 +300,26 @@
 
         // Renders all products for a specific category page (Full Grid View)
         function renderCategoryPage(category) {
-            const container = document.getElementById(category.toLowerCase().replace(/\s/g, '-') + '-products');
-            if (!container) return;
+            // Ensures the correct container ID is derived (e.g., 'Stationery' -> 'stationery-products')
+            // This JS logic correctly generates 'stationery-products' (with 'e' after t)
+            const containerId = category.toLowerCase().replace(/\s/g, '-') + '-products';
+            const container = document.getElementById(containerId);
+            
+            if (!container) {
+                console.error(`Container not found for category: ${category} with ID: ${containerId}`);
+                return;
+            }
 
-            // Fetch ALL products belonging to this category
+            // Fetch ALL products belonging to this category (featured and non-featured)
             const filteredProducts = productData.filter(p => p.category === category);
             
             // Display a message if no products are found
             if (filteredProducts.length === 0) {
-                container.innerHTML = '<p class="text-lg text-gray-500 p-8 text-center">No products found in this category yet. Check back soon!</p>';
+                container.innerHTML = '<p class="text-lg text-gray-500 p-8 text-center">এই ক্যাটাগরিতে আপাতত কোনো পণ্য নেই।</p>'; // Updated Bangla text
                 return;
             }
-
-            // Render products in a grid layout (isCarousel = false for all category page views)
+            
+            // Clear existing content and render products in a grid layout (isCarousel = false for all category page views)
             container.innerHTML = filteredProducts.map(product => renderProductCard(product, false)).join('');
         }
 
@@ -572,7 +589,8 @@
                     <!-- Desktop Navigation Links (Visible on MD+) -->
                     <nav class="hidden md:flex space-x-6 text-sm font-medium">
                         <a href="#" onclick="showPage('home-page')" class="nav-link hover:text-teal-accent transition duration-150">Home</a>
-                        <a href="#" onclick="showPage('stationary-page')" class="nav-link hover:text-teal-accent transition duration-150">Stationery</a>
+                        <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
+                        <a href="#" onclick="showPage('stationery-page')" class="nav-link hover:text-teal-accent transition duration-150">Stationery</a>
                         <a href="#" onclick="showPage('girls-hub-page')" class="nav-link hover:text-teal-accent transition duration-150">Girls Hub</a>
                         <a href="#" onclick="showPage('boys-hub-page')" class="nav-link hover:text-teal-accent transition duration-150">Boys Hub</a>
                         <a href="#" onclick="showPage('bags-page')" class="nav-link hover:text-teal-accent transition duration-150">Bags</a>
@@ -607,7 +625,8 @@
         <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-gray-600">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-sm">
                 <a href="#" onclick="showPage('home-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Home</a>
-                <a href="#" onclick="showPage('stationary-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Stationery</a>
+                <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
+                <a href="#" onclick="showPage('stationery-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Stationery</a>
                 <a href="#" onclick="showPage('girls-hub-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Girls Hub</a>
                 <a href="#" onclick="showPage('boys-hub-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Boys Hub</a>
                 <a href="#" onclick="showPage('bags-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Bags</a>
@@ -634,7 +653,7 @@
                 <!-- 2. Text Block -->
                 <div class="p-6 sm:p-10 text-center">
                     <h1 class="text-3xl sm:text-5xl font-extrabold text-charcoal mb-3 leading-tight">
-                        Students Friendly Hub In Rajshahi
+                        Students friendly hub in rajshahi
                     </h1>
                     <p class="text-base sm:text-xl text-gray-600 mb-6">Premium Essentials for a Minimal Price. Guaranteed Student Savings!</p>
                     <!-- View Top Selling Deals Button was removed here per user request -->
@@ -645,8 +664,8 @@
 
             <!-- 1. TOP SELLING STRIP (CAROUSEL) -->
             <section id="top-selling-products-strip" class="mb-12 relative">
-                <!-- UPDATED: Added uppercase class -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2 uppercase">Top Selling</h2>
+                <!-- UPDATED: Text is Title Case -->
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Top selling</h2>
 
                 <!-- Navigation Buttons (Hidden on small screens to rely on touch scroll) -->
                 <div class="absolute top-1/2 -left-3 transform -translate-y-1/2 z-10 hidden md:block">
@@ -668,38 +687,38 @@
             
             <!-- --- CATEGORY LISTS (NEW: Responsive view) --- -->
             
-            <!-- 2. STATIONERY HUB STRIP -->
-            <section id="stationary-products-strip" class="mb-12 relative">
-                <!-- UPDATED: Added uppercase class -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2 uppercase">Stationery Hub</h2>
+            <!-- 2. STATIONERY HUB STRIP (TARGET ID: stationery-products-strip) -->
+            <section id="stationery-products-strip" class="mb-12 relative"> <!-- FIXED: Corrected ID spelling from 'stationary-products-strip' to 'stationery-products-strip' -->
+                <!-- UPDATED: Text is Title Case -->
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Stationery hub</h2>
                 <!-- Container for the single item (mobile) or the expanded list/carousel (desktop) -->
-                <div id="stationary-category-container">
+                <div id="stationery-category-container"> <!-- FIXED: Corrected ID spelling from 'stationary-category-container' to 'stationery-category-container' -->
                     <!-- Content generated by JS: Initial 1 item + See More button (mobile) OR Full Carousel (desktop) -->
                 </div>
             </section>
             
-            <!-- 3. GIRLS HUB STRIP -->
+            <!-- 3. GIRLS HUB STRIP (TARGET ID: girls-hub-products-strip) -->
             <section id="girls-hub-products-strip" class="mb-12 relative">
-                <!-- UPDATED: Added uppercase class -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2 uppercase">Girls Hub</h2>
+                <!-- UPDATED: Text is Title Case -->
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Girls hub</h2>
                 <div id="girls-hub-category-container">
                     <!-- Content generated by JS -->
                 </div>
             </section>
 
-            <!-- 4. BOYS HUB STRIP -->
+            <!-- 4. BOYS HUB STRIP (TARGET ID: boys-hub-products-strip) -->
             <section id="boys-hub-products-strip" class="mb-12 relative">
-                <!-- UPDATED: Added uppercase class -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2 uppercase">Boys Hub</h2>
+                <!-- UPDATED: Text is Title Case -->
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Boys hub</h2>
                 <div id="boys-hub-category-container">
                     <!-- Content generated by JS -->
                 </div>
             </section>
 
-            <!-- 5. BAGS STRIP -->
+            <!-- 5. BAGS STRIP (TARGET ID: bags-products-strip) -->
             <section id="bags-products-strip" class="mb-12 relative">
-                <!-- UPDATED: Added uppercase class -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2 uppercase">Bags & Backpacks</h2>
+                <!-- UPDATED: Text is Title Case -->
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Bags & backpacks</h2>
                 <div id="bags-category-container">
                     <!-- Content generated by JS -->
                 </div>
@@ -710,19 +729,19 @@
         <!-- ============================================== -->
         <!-- 2. CATEGORY PAGES VIEW (Full Grid) -->
         <!-- ============================================== -->
-        <section id="stationary-page" class="content-page hidden min-h-[60vh]">
-            <!-- UPDATED: Added uppercase class to page header -->
-            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2 uppercase">Stationery Essentials</h1>
+        <section id="stationery-page" class="content-page hidden min-h-[60vh]"> <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
+            <!-- UPDATED: Text is Title Case -->
+            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2">Stationery essentials</h1>
             <p class="mb-6 text-gray-600">High-quality pens, notebooks, and academic tools for focused study sessions across Rajshahi.</p>
             <!-- Full grid view for the dedicated page -->
-            <div id="stationary-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div id="stationery-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"> <!-- FIXED: Corrected ID spelling from 'stationary-products' to 'stationery-products' -->
                 <!-- Stationery products will be rendered here by renderCategoryPage() -->
             </div>
         </section>
         
         <section id="girls-hub-page" class="content-page hidden min-h-[60vh]">
-            <!-- UPDATED: Added uppercase class to page header -->
-            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2 uppercase">Girls Hub: Style & Organization</h1>
+            <!-- UPDATED: Text is Title Case -->
+            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2">Girls hub: style & organization</h1>
             <p class="mb-6 text-gray-600">Minimalist accessories, aesthetic planners, and stylish gear to complement your campus look.</p>
             <!-- Full grid view for the dedicated page -->
             <div id="girls-hub-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -731,8 +750,8 @@
         </section>
 
         <section id="boys-hub-page" class="content-page hidden min-h-[60vh]">
-            <!-- UPDATED: Added uppercase class to page header -->
-            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2 uppercase">Boys Hub: Tech & Utility</h1>
+            <!-- UPDATED: Text is Title Case -->
+            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2">Boys hub: tech & utility</h1>
             <p class="mb-6 text-gray-600">Durable storage, essential tech gadgets, and tools built for engineering and science students.</p>
             <!-- Full grid view for the dedicated page -->
             <div id="boys-hub-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -741,8 +760,8 @@
         </section>
 
         <section id="bags-page" class="content-page hidden min-h-[60vh]">
-            <!-- UPDATED: Added uppercase class to page header -->
-            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2 uppercase">Bags & Backpacks</h1>
+            <!-- UPDATED: Text is Title Case -->
+            <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2">Bags & backpacks</h1>
             <p class="mb-6 text-gray-600">Water-resistant backpacks and simple totes designed to carry laptops and study material safely.</p>
             <!-- Full grid view for the dedicated page -->
             <div id="bags-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -773,7 +792,7 @@
             <!-- Checkout Form Content -->
             <div id="modal-content-form">
                 <div class="bg-charcoal text-white p-4 sm:p-6 rounded-t-xl text-center">
-                    <h2 class="text-xl sm:text-2xl font-bold">Complete Your Order</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold">Complete your order</h2>
                 </div>
 
                 <!-- MAIN FORM CONTENT (Responsive Padding: p-4 sm:p-6) -->
@@ -803,7 +822,7 @@
                     <form id="checkout-form" onsubmit="handleCheckoutSubmit(event)">
                         
                         <!-- 1. Customer Information (Always visible) -->
-                        <h4 class="text-lg font-bold text-charcoal mb-3">1. Your Contact Information</h4>
+                        <h4 class="text-lg font-bold text-charcoal mb-3">1. Your contact information</h4>
                         <div class="space-y-4 mb-6">
                             <input type="text" id="name" placeholder="Full Name (সম্পূর্ণ নাম)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
                             <input type="tel" id="phone" placeholder="Phone Number (ফোন নম্বর)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-accent focus:border-teal-accent transition">
@@ -812,7 +831,7 @@
                         
                         <!-- 2. Payment Method Selection (Collapsible Toggle) -->
                         <button type="button" onclick="togglePaymentSection()" class="w-full flex justify-between items-center text-lg font-bold text-charcoal p-3 mb-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
-                            <span>2. Select Payment Method (পেমেন্ট পদ্ধতি)</span>
+                            <span>2. Select payment method (পেমেন্ট পদ্ধতি)</span>
                             <!-- Icon: starts pointing right (0deg), rotates 90deg when open -->
                             <svg id="payment-toggle-icon" class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
@@ -860,7 +879,7 @@
 
                         <!-- Summary & Submit -->
                         <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg mb-4">
-                            <span class="text-lg font-semibold text-charcoal">Total Payable (মোট মূল্য):</span>
+                            <span class="text-lg font-semibold text-charcoal">Total payable (মোট মূল্য):</span>
                             <span id="checkout-total-price" class="text-2xl font-extrabold text-teal-accent">৳ 000</span>
                         </div>
                         
