@@ -46,7 +46,7 @@
             padding-right: 0.5rem;
         }
         .product-card {
-            /* MOBILE WIDTH (Applies when track is NOT visible, but used inside a track on mobile too) */
+            /* MOBILE WIDTH (Applies when track is visible in a carousel on mobile) */
             flex: 0 0 calc(38% - 8px); 
             max-width: none;
             scroll-snap-align: start;
@@ -67,6 +67,15 @@
                 padding-right: 0;
             }
         }
+        
+        /* Specific styling for the Category Page Grid (Non-Carousel View - isCarousel=false) */
+        .grid-card-small {
+            /* Ensures cards in the grid are responsive and compact */
+            flex: 1 1 0%; /* Allow shrinking/growing in the grid */
+            /* OVERRIDE: Smaller margin/padding if needed, but Tailwind gap-6 handles spacing */
+            padding: 1rem; /* Smaller padding for a more compact look */
+        }
+
 
         /* Hide scrollbar visually */
         .product-track::-webkit-scrollbar { display: none; }
@@ -176,7 +185,6 @@
                 renderHomeCarousels();
                 // --- Start auto-scroll ONLY for Top Selling (now isFeatured) ---
                 currentScrollIntervals.push(startAutoScroll('top-selling-carousel-track'));
-            // FIXED: Changed 'stationary-page' to 'stationery-page' (correct spelling)
             } else if (pageId === 'stationery-page') { 
                 renderCategoryPage('Stationery');
             } else if (pageId === 'girls-hub-page') {
@@ -196,6 +204,24 @@
 
 
         // --- PRODUCT RENDERING FUNCTIONS ---
+        
+        // Renders the main home page carousels
+        function renderHomeCarousels() {
+            // Render Top Selling (Featured products)
+            const featuredProducts = productData.filter(p => p.isFeatured);
+            const featuredTrack = document.getElementById('top-selling-carousel-track');
+            if (featuredTrack) {
+                // isCarousel = true: Always use the LARGER style for this main track
+                featuredTrack.innerHTML = featuredProducts.map(product => renderProductCard(product, true)).join('');
+            }
+            
+            // Render category strips for the home page.
+            renderResponsiveCategoryStrip('Stationery', 'stationery-category-container');
+            renderResponsiveCategoryStrip('Girls Hub', 'girls-hub-category-container');
+            renderResponsiveCategoryStrip('Boys Hub', 'boys-hub-category-container');
+            renderResponsiveCategoryStrip('Bags', 'bags-category-container');
+        }
+
 
         // New function to render the category strip responsively (Carousel for Desktop, 1-by-1 for Mobile)
         function renderResponsiveCategoryStrip(category, containerId) {
@@ -205,43 +231,41 @@
             // Filter non-featured products for the strip
             const products = productData.filter(p => p.category === category && !p.isFeatured);
             
-            if (isMobileView() && products.length > 0) {
+            if (products.length === 0) {
+                 container.innerHTML = `<p class="text-center text-gray-500 p-4">No more products in ${category}.</p>`;
+                 return;
+            }
+
+            if (isMobileView()) {
                 // --- MOBILE VIEW LOGIC (1 by 1 + See More) ---
                 const initialProduct = products[0];
-                const totalRemaining = products.length - 1;
+                const totalRemaining = products.length;
 
                 let html = '';
                 
-                // Render the first product card in single-column style (isCarousel=false)
-                html += renderProductCard(initialProduct, false);
+                // Render the first product card in single-column style (isCarousel=true for consistency in look)
+                // Note: The mobile strip still uses the carousel style (large)
+                html += renderProductCard(initialProduct, true);
                 
-                // Add the "See More" button if there's more than one product
-                if (products.length > 1) {
-                    // Map category name to page ID for "See More" button on mobile
-                    // FIXED: Ensure pageId uses the correct spelling 'stationery-page'
-                    const pageId = category.toLowerCase().replace(/\s/g, '-') + '-page';
+                // Add the "See More" button if there's products
+                // Map category name to page ID for "See More" button on mobile
+                const pageId = category.toLowerCase().replace(/\s/g, '-') + '-page';
 
-                    html += `
-                        <div class="text-center mt-6">
-                            <!-- UPDATED: Clicking "See More" now correctly navigates to the full category page -->
-                            <button onclick="showPage('${pageId}')" 
-                                class="px-6 py-3 bg-light-gray text-charcoal border border-gray-300 font-bold rounded-full shadow-sm hover:bg-gray-200 transition duration-200 uppercase text-sm">
-                                See ${totalRemaining} More Products
-                            </button>
-                        </div>
-                    `;
-                }
+                html += `
+                    <div class="text-center mt-6">
+                        <!-- 'See More' navigates to the full category page, which USES THE SMALLER CARD STYLE (isCarousel=false) -->
+                        <button onclick="showPage('${pageId}')" 
+                            class="px-6 py-3 bg-light-gray text-charcoal border border-gray-300 font-bold rounded-full shadow-sm hover:bg-gray-200 transition duration-200 uppercase text-sm">
+                            See All ${totalRemaining} Products
+                        </button>
+                    </div>
+                `;
                 container.innerHTML = html;
 
             } else {
                 // --- DESKTOP VIEW LOGIC (Horizontal Scrollable Carousel) ---
                 
-                if (products.length === 0) {
-                    container.innerHTML = `<p class="text-center text-gray-500 p-4">No products available in ${category}.</p>`;
-                    return;
-                }
-
-                // Render all products in a horizontal scrollable strip (isCarousel=true)
+                // Render all products in a horizontal scrollable strip (isCarousel=true -> LARGER STYLE)
                 let html = `
                     <div id="${containerId}-track" class="product-track">
                         ${products.map(product => renderProductCard(product, true)).join('')}
@@ -251,57 +275,9 @@
             }
         }
 
-
-        // Function to show all products in a single-column list (Only called from Mobile's "See More")
-        function toggleCategoryView(category, containerId) {
-            // This function is now OBSOLETE since 'See More' navigates to a full page via showPage()
-            // Kept as a placeholder for potential future functionality but not currently used 
-            // by the updated mobile "See More" button.
-            
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            // Filter ALL non-featured products belonging to this category
-            const products = productData.filter(p => p.category === category && !p.isFeatured);
-
-            // Render all products in a single column, one by one. (isCarousel=false)
-            const productsHTML = `
-                <!-- space-y-6 ensures separation between the full-width cards -->
-                <div class="space-y-6">
-                    ${products.map(product => renderProductCard(product, false)).join('')}
-                </div>
-                <div class="text-center mt-8 mb-4">
-                    <button onclick="showPage('home-page')" class="px-6 py-3 bg-teal-accent text-white font-bold rounded-full shadow-lg hover:bg-[#158C7C] transition duration-200 uppercase text-sm">
-                        Back to Top Selling
-                    </button>
-                </div>
-            `;
-
-            container.innerHTML = productsHTML;
-        }
-
-        // Renders products for all carousels/grids on the Home Page
-        function renderHomeCarousels() {
-            // Featured (Carousel) Track
-            const topSellingContainer = document.getElementById('top-selling-carousel-track');
-            
-            // 1. Top Selling (Featured) Products - RENDERED AS CAROUSEL ITEMS (isCarousel = true)
-            if (topSellingContainer) {
-                const featuredProducts = productData.filter(p => p.isFeatured);
-                topSellingContainer.innerHTML = featuredProducts.map(product => renderProductCard(product, true)).join('');
-            }
-            
-            // 2-5. Use the responsive strip renderer for categories
-            renderResponsiveCategoryStrip('Stationery', 'stationery-category-container'); // FIXED: Category strip container ID spelling
-            renderResponsiveCategoryStrip('Girls Hub', 'girls-hub-category-container');
-            renderResponsiveCategoryStrip('Boys Hub', 'boys-hub-category-container');
-            renderResponsiveCategoryStrip('Bags', 'bags-category-container');
-        }
-
         // Renders all products for a specific category page (Full Grid View)
         function renderCategoryPage(category) {
             // Ensures the correct container ID is derived (e.g., 'Stationery' -> 'stationery-products')
-            // This JS logic correctly generates 'stationery-products' (with 'e' after t)
             const containerId = category.toLowerCase().replace(/\s/g, '-') + '-products';
             const container = document.getElementById(containerId);
             
@@ -319,50 +295,96 @@
                 return;
             }
             
-            // Clear existing content and render products in a grid layout (isCarousel = false for all category page views)
+            // Clear existing content and render products in a grid layout 
+            // isCarousel = false is used here, which triggers the NEW SMALLER styling for grid view (as requested).
             container.innerHTML = filteredProducts.map(product => renderProductCard(product, false)).join('');
         }
 
         // Helper function to generate a single product card HTML
         function renderProductCard(product, isCarousel) {
-            // cardClass determines if it needs the 'product-card' class (for flex/scrolling) or just a static item.
-            // isCarousel is true for ANY horizontal track (featured, or category strips on desktop).
-            // isCarousel is false for mobile single-item view and all full category pages.
+            // cardClass determines if it needs the 'product-card' class (for carousel/flex) or just a static item + smaller style (for grid)
+            const baseCardClasses = 'bg-white p-5 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-[1.02]';
             const cardClass = isCarousel 
-                ? 'product-card bg-white p-5 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-[1.02]' 
-                : 'bg-white p-5 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-[1.02]';
+                ? 'product-card ' + baseCardClasses // For horizontal scrolling
+                : 'grid-card-small ' + baseCardClasses; // For the grid view (See More)
+
             
-            return `
-                <div class="${cardClass}">
-                    <!-- IMAGE HEIGHT REMAINS h-44 -->
-                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-44 object-cover rounded-lg mb-4" onerror="this.onerror=null;this.src='https://placehold.co/300x200/E5E7EB/4B5563?text=Image+Missing';">
-                    
-                    <!-- Increased spacing: mb-4 instead of mb-3 -->
-                    <p class="text-xs text-gray-500 mb-2">${product.category}</p>
-                    
-                    <!-- Increased spacing: mb-3 instead of mb-2 -->
-                    <h3 class="text-lg font-semibold text-charcoal mb-3 truncate">${product.name}</h3>
-                    
-                    <!-- 
-                        UPDATED FOR MINIMALIST MOBILE LOOK:
-                        - Price is now Salmon-Accent, max bold (font-black), and larger (text-2xl).
-                        - Button uses the Teal accent for the CTA.
-                    -->
-                    <div class="flex justify-between items-center">
-                        <!-- Price on Left -->
-                        <div class="text-left flex-shrink-0">
-                            <!-- !!! UPDATED: Color to salmon-accent, size to text-2xl, weight to font-black !!! -->
-                            <span class="final-price text-2xl font-black text-salmon-accent">৳ ${product.price}</span>
-                        </div>
-                        
-                        <!-- Button on Right -->
-                        <button onclick="handleKinunClick(${product.id})" 
-                            class="kinun-button flex-shrink-0 px-4 py-1.5 bg-teal-accent text-white text-sm rounded-lg font-bold hover:bg-[#158C7C] transition duration-200 shadow-md">
-                            Order Now
-                        </button>
-                    </div>
-                </div>
+            // --- CONDITIONAL STYLING LOGIC ---
+            
+            // LARGER STYLING (Home Page Carousels: isCarousel=true)
+            let imageSizeClass = 'h-44';
+            let titleSizeClass = 'text-lg';
+            let priceSizeClass = 'text-2xl';
+            let buttonPaddingClass = 'px-4 py-1.5';
+            let buttonTextClass = 'text-sm';
+            
+            if (!isCarousel) {
+                // SMALLER STYLING (Category Page Grid: isCarousel=false)
+                imageSizeClass = 'h-36';
+                titleSizeClass = 'text-sm'; 
+                priceSizeClass = 'text-xl'; 
+                buttonPaddingClass = 'px-3 py-1'; 
+                buttonTextClass = 'text-xs'; 
+            }
+
+            // Order Now button HTML (always English, always present in the final layout structure)
+            // Note: For Home Page (isCarousel=true), the button is auto-width, for Category Page (isCarousel=false), it's w-full
+            const buttonHtml = `
+                <button onclick="handleKinunClick(${product.id})" 
+                    class="kinun-button flex-shrink-0 ${isCarousel ? 'w-auto' : 'w-full'} ${buttonPaddingClass} bg-teal-accent text-white ${buttonTextClass} rounded-full font-bold hover:bg-[#158C7C] transition duration-200 shadow-md uppercase">
+                    Order Now 
+                </button>
             `;
+
+            // --- USER REQUESTED LAYOUT LOGIC ---
+            
+            if (isCarousel) {
+                // Home Page (Carousel) Layout: Price on LEFT, Button on RIGHT (as requested by user)
+                return `
+                    <div class="${cardClass}">
+                        <!-- Image -->
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full ${imageSizeClass} object-cover rounded-lg mb-4" onerror="this.onerror=null;this.src='https://placehold.co/300x200/E5E7EB/4B5563?text=Image+Missing';">
+                        
+                        <!-- Category Label -->
+                        <p class="text-xs text-gray-500 mb-2">${product.category}</p>
+                        
+                        <!-- Product Title -->
+                        <h3 class="${titleSizeClass} font-semibold text-charcoal mb-3 truncate">${product.name}</h3>
+                        
+                        <!-- Price (Left) and Button (Right) Container (NEW FLEX ROW) -->
+                        <div class="flex justify-between items-center mt-3">
+                            <!-- Price (Left) -->
+                            <span class="final-price ${priceSizeClass} font-black text-salmon-accent flex-shrink-0">৳ ${product.price}</span>
+                            
+                            <!-- Button (Right) -->
+                            ${buttonHtml} 
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Category Page (Grid) Layout: Price on TOP, Button on BOTTOM (Original column layout)
+                 return `
+                    <div class="${cardClass}">
+                        <!-- Image -->
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full ${imageSizeClass} object-cover rounded-lg mb-4" onerror="this.onerror=null;this.src='https://placehold.co/300x200/E5E7EB/4B5563?text=Image+Missing';">
+                        
+                        <!-- Category Label -->
+                        <p class="text-xs text-gray-500 mb-2">${product.category}</p>
+                        
+                        <!-- Product Title (Now uses conditional title size) -->
+                        <h3 class="${titleSizeClass} font-semibold text-charcoal mb-3 truncate">${product.name}</h3>
+                        
+                        <!-- Price and Button Container (Column Layout for Grid View) -->
+                        <div class="flex flex-col items-start">
+                            <!-- Price on Top -->
+                            <span class="final-price ${priceSizeClass} font-black text-salmon-accent">৳ ${product.price}</span>
+                            
+                            <!-- Button Below Price (Wider button for better tap target) -->
+                            ${buttonHtml}
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         // --- CHECKOUT LOGIC ---
@@ -433,7 +455,8 @@
 
             // Simple validation
             if (!name || !phone || !address || !paymentMethod) {
-                document.getElementById('form-error').textContent = "অনুগ্রহ করে সকল তথ্য পূরণ করুন এবং একটি পেমেন্ট পদ্ধতি নির্বাচন করুন। (Please fill in all details and select a payment method.)";
+                // <<<< UPDATED: Simpler, English-focused error message
+                document.getElementById('form-error').textContent = "Please fill in all details and select a payment method."; 
                 document.getElementById('form-error').classList.remove('hidden');
                 return;
             }
@@ -589,7 +612,6 @@
                     <!-- Desktop Navigation Links (Visible on MD+) -->
                     <nav class="hidden md:flex space-x-6 text-sm font-medium">
                         <a href="#" onclick="showPage('home-page')" class="nav-link hover:text-teal-accent transition duration-150">Home</a>
-                        <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
                         <a href="#" onclick="showPage('stationery-page')" class="nav-link hover:text-teal-accent transition duration-150">Stationery</a>
                         <a href="#" onclick="showPage('girls-hub-page')" class="nav-link hover:text-teal-accent transition duration-150">Girls Hub</a>
                         <a href="#" onclick="showPage('boys-hub-page')" class="nav-link hover:text-teal-accent transition duration-150">Boys Hub</a>
@@ -625,7 +647,6 @@
         <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-gray-600">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-sm">
                 <a href="#" onclick="showPage('home-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Home</a>
-                <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
                 <a href="#" onclick="showPage('stationery-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Stationery</a>
                 <a href="#" onclick="showPage('girls-hub-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Girls Hub</a>
                 <a href="#" onclick="showPage('boys-hub-page')" class="block px-3 py-2 rounded-md font-medium text-white hover:bg-charcoal">Boys Hub</a>
@@ -688,11 +709,11 @@
             <!-- --- CATEGORY LISTS (NEW: Responsive view) --- -->
             
             <!-- 2. STATIONERY HUB STRIP (TARGET ID: stationery-products-strip) -->
-            <section id="stationery-products-strip" class="mb-12 relative"> <!-- FIXED: Corrected ID spelling from 'stationary-products-strip' to 'stationery-products-strip' -->
+            <section id="stationery-products-strip" class="mb-12 relative">
                 <!-- UPDATED: Text is Title Case -->
                 <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Stationery hub</h2>
                 <!-- Container for the single item (mobile) or the expanded list/carousel (desktop) -->
-                <div id="stationery-category-container"> <!-- FIXED: Corrected ID spelling from 'stationary-category-container' to 'stationery-category-container' -->
+                <div id="stationery-category-container">
                     <!-- Content generated by JS: Initial 1 item + See More button (mobile) OR Full Carousel (desktop) -->
                 </div>
             </section>
@@ -700,7 +721,7 @@
             <!-- 3. GIRLS HUB STRIP (TARGET ID: girls-hub-products-strip) -->
             <section id="girls-hub-products-strip" class="mb-12 relative">
                 <!-- UPDATED: Text is Title Case -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Girls hub</h2>
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Girls hub: style & organization</h2>
                 <div id="girls-hub-category-container">
                     <!-- Content generated by JS -->
                 </div>
@@ -709,7 +730,7 @@
             <!-- 4. BOYS HUB STRIP (TARGET ID: boys-hub-products-strip) -->
             <section id="boys-hub-products-strip" class="mb-12 relative">
                 <!-- UPDATED: Text is Title Case -->
-                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Boys hub</h2>
+                <h2 class="text-2xl sm:text-3xl font-bold text-charcoal mb-6 border-b-2 border-teal-accent pb-2">Boys hub: tech & utility</h2>
                 <div id="boys-hub-category-container">
                     <!-- Content generated by JS -->
                 </div>
@@ -729,12 +750,12 @@
         <!-- ============================================== -->
         <!-- 2. CATEGORY PAGES VIEW (Full Grid) -->
         <!-- ============================================== -->
-        <section id="stationery-page" class="content-page hidden min-h-[60vh]"> <!-- FIXED: Corrected ID spelling from 'stationary-page' to 'stationery-page' -->
+        <section id="stationery-page" class="content-page hidden min-h-[60vh]">
             <!-- UPDATED: Text is Title Case -->
             <h1 class="text-3xl font-bold text-charcoal mb-8 border-b-2 border-teal-accent pb-2">Stationery essentials</h1>
             <p class="mb-6 text-gray-600">High-quality pens, notebooks, and academic tools for focused study sessions across Rajshahi.</p>
             <!-- Full grid view for the dedicated page -->
-            <div id="stationery-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"> <!-- FIXED: Corrected ID spelling from 'stationary-products' to 'stationery-products' -->
+            <div id="stationery-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <!-- Stationery products will be rendered here by renderCategoryPage() -->
             </div>
         </section>
